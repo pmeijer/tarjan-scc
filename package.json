@@ -1,6 +1,6 @@
 {
   "name": "tarjan-scc",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "tarjan's algoirthm for finding strongly connected components",
   "author": "http://github.com/pmeijer",
   "license": "MIT",
