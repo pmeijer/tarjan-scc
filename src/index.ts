@@ -1,4 +1,4 @@
-function Vertex(id: string|number) {
+function Vertex(id: string | number) {
     this.id = id;
     this.connectedVertices = [];
     this.index = -1;
@@ -14,7 +14,7 @@ function Graph() {
     this.vertices = {};
 }
 
-Graph.prototype.addVertex = function (id: string|number) {
+Graph.prototype.addVertex = function (id: string | number) {
     if (this.vertices.hasOwnProperty(id)) {
         return false;
     } else {
@@ -23,7 +23,7 @@ Graph.prototype.addVertex = function (id: string|number) {
     }
 };
 
-Graph.prototype.connectVertices = function (id1: string|number, id2: string|number) {
+Graph.prototype.connectVertices = function (id1: string | number, id2: string | number) {
     if (this.vertices.hasOwnProperty(id1) === false) {
         throw new Error('Vertex [' + id1 + '] was never added to graph!');
     }
@@ -66,115 +66,90 @@ Graph.prototype.connectVertices = function (id1: string|number, id2: string|numb
  *
  * @author pmeijer / https://github.com/pmeijer
  */
-export function Tarjan() {
-    this.index = 0;
-    this.stackLookup = {};
-    this.stack = [];
-    this.graph = new Graph();
-    this.SCCs = [];
-    this.didRun = false;
-}
+export class Tarjan {
+    private index: number = 0;
+    private stackLookup: { [key: string]: boolean } = {};
+    private stack: any[] = [];
+    private graph: any = new Graph();
+    private SCCs: Array<Array<string | number>> = [];
+    private didRun: boolean = false;
 
-/**
- * Adds a vertex with given id.
- * @param {string|number} id
- * @returns {boolean} false if it was already added.
- */
-Tarjan.prototype.addVertex = function (id: string|number): boolean {
-    if (this.didRun) {
-        throw new Error('Cannot modify graph after algorithm ran!');
-    }
-
-    return this.graph.addVertex(id);
-};
-
-/**
- * Creates a connection from vertex at id1 to vertex at id2
- * @param {string|number} src
- * @param {string|number} dst
- */
-Tarjan.prototype.connectVertices = function (src: string|number, dst: string|number) {
-    if (this.didRun) {
-        throw new Error('Cannot modify graph after algorithm ran!');
-    }
-
-    this.graph.connectVertices(dst, src);
-};
-
-/**
- * Checks if there are any loops in the graph.
- * @returns {boolean}
- */
-Tarjan.prototype.hasLoops = function (): boolean {
-    this.calculateSCCs();
-
-    for (let i = 0; i < this.SCCs.length; i += 1) {
-        if (this.SCCs[i].length > 1) {
-            return true;
+    addVertex(id: string | number): boolean {
+        if (this.didRun) {
+            throw new Error('Cannot modify graph after algorithm ran!');
         }
+
+        return this.graph.addVertex(id);
     }
 
-    return false;
-};
+    connectVertices(src: string | number, dst: string | number): void {
+        if (this.didRun) {
+            throw new Error('Cannot modify graph after algorithm ran!');
+        }
 
-/**
- * Returns the strongly connected components (by ids)
- * @returns {Array<Array<String|Number>>} An array with all SCCs.
- */
-Tarjan.prototype.calculateSCCs = function (): Array<Array<String|Number>> {
-    if (this.didRun === false) {
-        for (const id in this.graph.vertices) {
-            if (this.graph.vertices[id].index < 0) {
-                this._strongConnect(this.graph.vertices[id]);
+        this.graph.connectVertices(dst, src);
+    }
+
+    hasLoops(): boolean {
+        this.calculateSCCs();
+
+        for (let i = 0; i < this.SCCs.length; i += 1) {
+            if (this.SCCs[i].length > 1) {
+                return true;
             }
         }
 
-        this.didRun = true;
+        return false;
     }
 
-    return this.SCCs;
-};
+    calculateSCCs(): Array<Array<string | number>> {
+        if (this.didRun === false) {
+            for (const id in this.graph.vertices) {
+                if (this.graph.vertices[id].index < 0) {
+                    this._strongConnect(this.graph.vertices[id]);
+                }
+            }
 
-Tarjan.prototype._strongConnect = function (vertex: any) {
-    const sccVertices = [];
-    let connectedVertex: any;
-    let topVertex: any;
-    // Set the depth index for v to the smallest unused index
-    vertex.index = this.index;
-    vertex.lowlink = this.index;
-    this.index = this.index + 1;
-
-    this.stack.push(vertex);
-    this.stackLookup[vertex.id] = true;
-    // Consider successors of vertex
-    // aka... consider each vertex in vertex.connections
-    for (let i = 0; i < vertex.connectedVertices.length; i += 1) {
-        connectedVertex = vertex.connectedVertices[i];
-        if (connectedVertex.index < 0) {
-            // Successor connectedVertex has not yet been visited; recurse on it
-            this._strongConnect(connectedVertex);
-            vertex.lowlink = Math.min(vertex.lowlink, connectedVertex.lowlink);
-        } else if (this.stackLookup[connectedVertex.id]) {
-            // Successor connectedVertex is in stack S and hence in the current SCC
-            vertex.lowlink = Math.min(vertex.lowlink, connectedVertex.index);
+            this.didRun = true;
         }
+
+        return this.SCCs;
     }
 
-    // If vertex is a root node, pop the stack and generate an SCC.
-    if (vertex.lowlink === vertex.index) {
-        // start a new strongly connected component
-        if (this.stack.length > 0) {
-            do {
-                topVertex = this.stack.pop();
-                this.stackLookup[topVertex.id] = false;
-                // add topVertex to current strongly connected component
-                sccVertices.push(topVertex.id);
-            } while (vertex.id !== topVertex.id);
+    private _strongConnect(vertex: any): void {
+        const sccVertices: any[] = [];
+        let connectedVertex: any;
+        let topVertex: any;
+
+        vertex.index = this.index;
+        vertex.lowlink = this.index;
+        this.index = this.index + 1;
+
+        this.stack.push(vertex);
+        this.stackLookup[vertex.id] = true;
+
+        for (let i = 0; i < vertex.connectedVertices.length; i += 1) {
+            connectedVertex = vertex.connectedVertices[i];
+            if (connectedVertex.index < 0) {
+                this._strongConnect(connectedVertex);
+                vertex.lowlink = Math.min(vertex.lowlink, connectedVertex.lowlink);
+            } else if (this.stackLookup[connectedVertex.id]) {
+                vertex.lowlink = Math.min(vertex.lowlink, connectedVertex.index);
+            }
         }
-        // output the current strongly connected component
-        // ... i'm going to push the results to a member scc array variable
-        if (sccVertices.length > 0) {
-            this.SCCs.push(sccVertices);
+
+        if (vertex.lowlink === vertex.index) {
+            if (this.stack.length > 0) {
+                do {
+                    topVertex = this.stack.pop();
+                    this.stackLookup[topVertex.id] = false;
+                    sccVertices.push(topVertex.id);
+                } while (vertex.id !== topVertex.id);
+            }
+
+            if (sccVertices.length > 0) {
+                this.SCCs.push(sccVertices);
+            }
         }
     }
-};
+}
